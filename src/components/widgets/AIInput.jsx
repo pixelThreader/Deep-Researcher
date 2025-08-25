@@ -686,7 +686,7 @@ const AIInput = () => {
                                                         exit={{ opacity: 0, y: -10 }}
                                                         className="flex items-center justify-center"
                                                     >
-                                                        <Send className="w-5 h-5" />
+                                                        <Send className="w-5 h-5 rotate-45 -translate-x-0.5" />
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>

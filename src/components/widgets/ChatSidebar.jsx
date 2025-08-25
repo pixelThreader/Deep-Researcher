@@ -6,27 +6,11 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from '../ui/avatar'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { Plus, Search, BookOpen, Folder, Cpu, Settings, PanelRightClose, PanelRightOpen } from 'lucide-react'
 
-const NavItem = ({ icon: Icon, label, onClick, active = false, collapsed = false }) => (
-    <motion.button
-        onClick={onClick}
-        className={cn(
-            'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors',
-            active && 'bg-gray-800/80 text-gray-100',
-            collapsed && 'justify-center'
-        )}
-        title={collapsed ? label : undefined}
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.15 }}
-    >
-        <Icon className="w-4 h-4" />
-        {!collapsed && <span className="truncate">{label}</span>}
-    </motion.button>
-)
+
 
 const ChatSidebar = ({
     recentChats = [],
@@ -37,7 +21,7 @@ const ChatSidebar = ({
     const [query, setQuery] = useState('')
     const [collapsed, setCollapsed] = useState(false)
     const [headerHover, setHeaderHover] = useState(false)
-
+    const navigate = useNavigate()
     useEffect(() => {
         try {
             const saved = localStorage.getItem('dr.sidebar.collapsed')
@@ -77,30 +61,30 @@ const ChatSidebar = ({
                         headerHover ? (
                             <Tooltip>
                                 <TooltipTrigger>
-                            <motion.button
-                                key="toggle-left"
-                                className="inline-flex cursor-pointer items-center justify-center w-10 h-10 rounded-md border border-gray-800 bg-gray-900/60 text-gray-300 hover:bg-gray-800"
-                                onClick={() => setCollapsed(v => !v)}
-                                title="Expand"
+                                    <motion.button
+                                        key="toggle-left"
+                                        className="inline-flex cursor-pointer items-center justify-center w-10 h-10 rounded-md border border-gray-800 bg-gray-900/60 text-gray-300 hover:bg-gray-800"
+                                        onClick={() => setCollapsed(v => !v)}
+                                        title="Expand"
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.96 }}
+                                        transition={{ duration: 0.12 }}
+                                    >
+                                        <PanelRightClose className="w-5 h-5" />
+                                    </motion.button>
+                                </TooltipTrigger>
+                                <TooltipContent side="right" align="center" className="bg-slate-900 text-gray-200 border border-gray-800" hideArrow={true} sideOffset={10}>
+                                    <p>Expand</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        ) : (
+                            <motion.picture
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.96 }}
                                 transition={{ duration: 0.12 }}
                             >
-                                <PanelRightClose className="w-5 h-5" />
-                            </motion.button>
-                            </TooltipTrigger>
-                            <TooltipContent side="right" align="center" className="bg-slate-900 text-gray-200 border border-gray-800" hideArrow={true} sideOffset={10}>
-                                <p>Expand</p>
-                            </TooltipContent>
-                            </Tooltip>
-                        ) : (
-                                <motion.picture
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.96 }}
-                                    transition={{ duration: 0.12 }}
-                                >
                                 <source srcSet="/brand/Square284x284Logo.png" type="image/png" />
                                 <img src="/brand/Square284x284Logo.png" alt="Deep Researcher" className={cn('select-none', 'h-10 w-10')} draggable={false} />
                             </motion.picture>
@@ -108,7 +92,9 @@ const ChatSidebar = ({
 
 
                     ) : (
-                        <>
+                            <div
+                                onClick={() => navigate('/')}
+                                className='flex items-center gap-2 cursor-pointer'>
                             <picture>
                                 <source srcSet="/brand/Square284x284Logo.png" type="image/png" />
                                 <img src="/brand/Square284x284Logo.png" alt="Deep Researcher" className={cn('select-none', 'h-10 w-auto')} draggable={false} />
@@ -128,7 +114,7 @@ const ChatSidebar = ({
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </>
+                        </div>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -136,22 +122,22 @@ const ChatSidebar = ({
                         {!collapsed && (
                             <Tooltip>
                                 <TooltipTrigger>
-                            <motion.button
-                                key="togglebtn"
-                                className="inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-md border border-gray-800 bg-gray-900/60 text-gray-300 hover:bg-gray-800"
-                                onClick={() => setCollapsed(v => !v)}
-                                title={collapsed ? 'Expand' : 'Collapse'}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.96 }}
-                                transition={{ duration: 0.12 }}
-                            >
-                                <PanelRightOpen className="w-4 h-4" />
-                            </motion.button>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom" align="center" className="bg-slate-900 text-gray-200 border border-gray-800" hideArrow={true} sideOffset={10}>
-                                <p>Collapse</p>
-                            </TooltipContent>
+                                    <motion.button
+                                        key="togglebtn"
+                                        className="inline-flex cursor-pointer items-center justify-center w-8 h-8 rounded-md border border-gray-800 bg-gray-900/60 text-gray-300 hover:bg-gray-800"
+                                        onClick={() => setCollapsed(v => !v)}
+                                        title={collapsed ? 'Expand' : 'Collapse'}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.96 }}
+                                        transition={{ duration: 0.12 }}
+                                    >
+                                        <PanelRightOpen className="w-4 h-4" />
+                                    </motion.button>
+                                </TooltipTrigger>
+                                <TooltipContent side="bottom" align="center" className="bg-slate-900 text-gray-200 border border-gray-800" hideArrow={true} sideOffset={10}>
+                                    <p>Collapse</p>
+                                </TooltipContent>
                             </Tooltip>
                         )}
                     </AnimatePresence>
@@ -159,9 +145,9 @@ const ChatSidebar = ({
             </div>
 
             {/* Quick nav */}
-            <motion.div 
+            <motion.div
                 className={cn('border-b border-gray-900/70 relative overflow-hidden', !isExpanded && 'px-2')}
-                animate={{ 
+                animate={{
                     paddingLeft: isExpanded ? 12 : 8,
                     paddingRight: isExpanded ? 12 : 8,
                     paddingTop: 8,
@@ -172,14 +158,14 @@ const ChatSidebar = ({
                 {/* Search bar - slides up when collapsed */}
                 <motion.div
                     className="relative mb-2"
-                    animate={{ 
+                    animate={{
                         y: isExpanded ? 0 : -60,
                         opacity: isExpanded ? 1 : 0,
                         height: isExpanded ? 'auto' : 0
                     }}
-                    transition={{ 
-                        type: 'spring', 
-                        stiffness: 300, 
+                    transition={{
+                        type: 'spring',
+                        stiffness: 300,
                         damping: 30,
                         opacity: { duration: 0.2 }
                     }}
@@ -218,7 +204,7 @@ const ChatSidebar = ({
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <Plus className="w-4 h-4" />
-                                <motion.span 
+                                <motion.span
                                     className="truncate"
                                     animate={{ opacity: isExpanded ? 1 : 0 }}
                                     transition={{ duration: 0.2 }}
@@ -229,9 +215,9 @@ const ChatSidebar = ({
                         ) : (
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <button 
-                                        className="p-2 cursor-pointer text-gray-400 hover:text-gray-200" 
-                                        title="New chat" 
+                                    <button
+                                        className="p-2 cursor-pointer text-gray-400 hover:text-gray-200"
+                                        title="New chat"
                                         onClick={onNewChat}
                                     >
                                         <Plus className="w-4 h-4" />
@@ -256,11 +242,11 @@ const ChatSidebar = ({
                     >
                         {isExpanded ? (
                             <button
-                                onClick={() => {}}
+                                onClick={() => { }}
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <BookOpen className="w-4 h-4" />
-                                <motion.span 
+                                <motion.span
                                     className="truncate"
                                     animate={{ opacity: isExpanded ? 1 : 0 }}
                                     transition={{ duration: 0.2 }}
@@ -294,11 +280,11 @@ const ChatSidebar = ({
                     >
                         {isExpanded ? (
                             <button
-                                onClick={() => {}}
+                                onClick={() => { }}
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <Folder className="w-4 h-4" />
-                                <motion.span 
+                                <motion.span
                                     className="truncate"
                                     animate={{ opacity: isExpanded ? 1 : 0 }}
                                     transition={{ duration: 0.2 }}
@@ -332,11 +318,11 @@ const ChatSidebar = ({
                     >
                         {isExpanded ? (
                             <button
-                                onClick={() => {}}
+                                onClick={() => { }}
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <Cpu className="w-4 h-4" />
-                                <motion.span 
+                                <motion.span
                                     className="truncate"
                                     animate={{ opacity: isExpanded ? 1 : 0 }}
                                     transition={{ duration: 0.2 }}
@@ -370,11 +356,11 @@ const ChatSidebar = ({
                     >
                         {isExpanded ? (
                             <button
-                                onClick={() => {}}
+                                onClick={() => { }}
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <Settings className="w-4 h-4" />
-                                <motion.span 
+                                <motion.span
                                     className="truncate"
                                     animate={{ opacity: isExpanded ? 1 : 0 }}
                                     transition={{ duration: 0.2 }}
