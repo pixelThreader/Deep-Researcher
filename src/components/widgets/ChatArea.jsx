@@ -437,9 +437,19 @@ const ChatArea = ({ messages, onSend, isProcessing }) => {
                         />
 
                         <button
-                            onClick={() => {
-                                if (!isRecording) { setIsRecording(true); startRecording() }
-                                else { setIsRecording(false); stopRecording() }
+                            onClick={async () => {
+                                if (!isRecording) {
+                                    setIsRecording(true);
+                                    try {
+                                        await startRecording();
+                                    } catch (err) {
+                                        setIsRecording(false);
+                                    }
+                                }
+                                else {
+                                    setIsRecording(false);
+                                    stopRecording()
+                                }
                             }}
                             className={`inline-flex items-center justify-center p-3 ${isMultiline ? 'rounded-md' : 'rounded-full'} transition-colors duration-200 ${isRecording ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-600 hover:bg-gray-500 text-gray-300'}`}
                         >

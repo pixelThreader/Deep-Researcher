@@ -19,8 +19,6 @@ import {
     Loader2,
     Plus,
     Settings,
-    Mic,
-    MicOff,
     ArrowDown
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -45,16 +43,19 @@ const AIInput = () => {
     const [characterCount, setCharacterCount] = useState(0);
     const [isFileDropdownOpen, setIsFileDropdownOpen] = useState(false);
     const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-    const [isRecording, setIsRecording] = useState(false);
     const [showFileTypeDropdown, setShowFileTypeDropdown] = useState(false);
 
     // Inline autocomplete state
     const [inlineSuggestion, setInlineSuggestion] = useState('');
     const [isLoadingAutocomplete, setIsLoadingAutocomplete] = useState(false);
 
+    // Models state
+    const [availableModels, setAvailableModels] = useState([]);
+    const [isLoadingModels, setIsLoadingModels] = useState(false);
+    const [modelsError, setModelsError] = useState(null);
+
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
-    const microphoneRef = useRef(null);
     const autocompleteTimeoutRef = useRef(null);
 
     // Auto-resize textarea and character count
@@ -94,17 +95,19 @@ const AIInput = () => {
         };
     }, [query]);
 
-    // Cleanup audio and autocomplete on unmount
+    // Cleanup autocomplete on unmount
     useEffect(() => {
         return () => {
-            if (isRecording) {
-                stopRecording();
-            }
             if (autocompleteTimeoutRef.current) {
                 clearTimeout(autocompleteTimeoutRef.current);
             }
         };
-    }, [isRecording]);
+    }, []);
+
+    // Fetch available models on component mount
+    useEffect(() => {
+        fetchAvailableModels();
+    }, []);
 
     // Memoize SplitText props to prevent unnecessary re-renders
     const splitTextProps = useMemo(() => ({
@@ -122,6 +125,55 @@ const AIInput = () => {
     }), []);
 
     const navigate = useNavigate();
+
+    // Fetch available models from Ollama API
+    const fetchAvailableModels = async () => {
+        setIsLoadingModels(true);
+        setModelsError(null);
+        try {
+            const modelNames = await invoke('cmd_get_models');
+            // Convert model names to the expected format with descriptions
+            const modelsWithDescriptions = modelNames.map(name => ({
+                id: name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                name: name,
+                description: getModelDescription(name)
+            }));
+            setAvailableModels(modelsWithDescriptions);
+
+            // Set default model if current selected model is not in the list
+            if (modelsWithDescriptions.length > 0 && !modelsWithDescriptions.find(m => m.name === selectedModel)) {
+                setSelectedModel(modelsWithDescriptions[0].name);
+            }
+        } catch (error) {
+            console.error('Failed to fetch models:', error);
+            setModelsError(error);
+            // Fallback to hardcoded models on error
+            setAvailableModels([
+                { id: 'gpt-5-preview', name: 'GPT-5 (Preview)', description: 'Early access, subject to change' },
+                { id: 'claude-sonnet', name: 'Claude Sonnet 4', description: 'Most advanced model' },
+                { id: 'claude-haiku', name: 'Claude Haiku', description: 'Fast and efficient' },
+                { id: 'gpt4', name: 'GPT-4', description: 'Creative and analytical' },
+                { id: 'gemini', name: 'Gemini', description: 'Multimodal capabilities' }
+            ]);
+        } finally {
+            setIsLoadingModels(false);
+        }
+    };
+
+    // Helper function to generate descriptions for model names
+    const getModelDescription = (modelName) => {
+        const name = modelName.toLowerCase();
+        if (name.includes('llama')) return 'Meta Llama series model';
+        if (name.includes('codellama')) return 'Code-focused Llama model';
+        if (name.includes('mistral')) return 'Mistral AI model';
+        if (name.includes('phi')) return 'Microsoft Phi model';
+        if (name.includes('gemma')) return 'Google Gemma model';
+        if (name.includes('qwen')) return 'Alibaba Qwen model';
+        if (name.includes('deepseek')) return 'DeepSeek model';
+        if (name.includes('yi')) return '01.AI Yi model';
+        if (name.includes('vicuna')) return 'LMSYS Vicuna model';
+        return 'Local Ollama model';
+    };
 
     // Fallback inline suggestion function for browser/testing
     const getFallbackInlineSuggestion = (text) => {
@@ -326,26 +378,7 @@ const AIInput = () => {
         );
     };
 
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            microphoneRef.current = stream;
-        } catch (error) {
-            console.error('Error accessing microphone:', error);
-            setIsRecording(false);
-        }
-    };
-
-    const stopRecording = () => {
-        try {
-            if (microphoneRef.current) {
-                microphoneRef.current.getTracks().forEach(track => track.stop());
-                microphoneRef.current = null;
-            }
-        } catch (error) {
-            console.error('Error stopping recording:', error);
-        }
-    };
+    // Voice recording removed: relying on default OS/browser dictation if available
 
     const agentTypes = [
         { id: 'research', name: 'Research Assistant', icon: Brain, description: 'Deep research and analysis' },
@@ -354,7 +387,9 @@ const AIInput = () => {
         { id: 'analyst', name: 'Data Analyst', icon: Lightbulb, description: 'Data analysis and insights' }
     ];
 
-    const models = [
+    // Use availableModels if loaded, otherwise fallback to hardcoded models
+    const models = availableModels.length > 0 ? availableModels : [
+        { id: 'gpt-5-preview', name: 'GPT-5 (Preview)', description: 'Early access, subject to change' },
         { id: 'claude-sonnet', name: 'Claude Sonnet 4', description: 'Most advanced model' },
         { id: 'claude-haiku', name: 'Claude Haiku', description: 'Fast and efficient' },
         { id: 'gpt4', name: 'GPT-4', description: 'Creative and analytical' },
@@ -404,11 +439,11 @@ const AIInput = () => {
                                 showBorder={false}
                                 className="cursor-default"
                             >
-                                <h1 className="text-7xl font-bold mb-10 merienda">
-                                    Chat with AI
+                                <h1 className="text-7xl font-bold mb-10 merienda p-5">
+                                    Deep Researcher
                                 </h1>
                             </GradientText>
-                            <p className="text-gray-300 text-lg">Advanced AI-powered chat</p>
+                            <p className="text-gray-300 text-lg">Advanced Ollama-powered AI research.</p>
                         </motion.div>
 
                         {/* Main Input Container */}
@@ -592,69 +627,48 @@ const AIInput = () => {
                                                         }`}
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
-                                                    <span className="text-sm font-medium">{selectedModel}</span>
-                                                    <ChevronDown className="w-4 h-4" />
+                                                    <span className="text-sm font-medium">
+                                                        {isLoadingModels ? 'Loading...' : selectedModel}
+                                                    </span>
+                                                    {isLoadingModels ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <ChevronDown className="w-4 h-4" />
+                                                    )}
                                                 </motion.button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent className="bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50" sideOffset={8}>
-                                                {models.map((model) => (
-                                                    <DropdownMenuItem
-                                                        key={model.id}
-                                                        onClick={() => setSelectedModel(model.name)}
-                                                        className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700 hover:text-gray-200 focus:text-gray-200 cursor-pointer px-3 py-2"
-                                                    >
-                                                        <div>
-                                                            <div className="font-medium">{model.name}</div>
-                                                            <div className="text-xs text-gray-400">{model.description}</div>
-                                                        </div>
-                                                    </DropdownMenuItem>
-                                                ))}
+                                                {isLoadingModels ? (
+                                                    <div className="px-3 py-2 text-gray-400 text-sm flex items-center gap-2">
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                        Loading models...
+                                                    </div>
+                                                ) : modelsError ? (
+                                                    <div className="px-3 py-2 text-red-400 text-sm">
+                                                        Failed to load models. Using defaults.
+                                                    </div>
+                                                ) : models.length === 0 ? (
+                                                    <div className="px-3 py-2 text-gray-400 text-sm">
+                                                        No models available
+                                                    </div>
+                                                ) : (
+                                                    models.map((model) => (
+                                                        <DropdownMenuItem
+                                                            key={model.id}
+                                                            onClick={() => setSelectedModel(model.name)}
+                                                            className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700 hover:text-gray-200 focus:text-gray-200 cursor-pointer px-3 py-2"
+                                                        >
+                                                            <div>
+                                                                <div className="font-medium">{model.name}</div>
+                                                                <div className="text-xs text-gray-400">{model.description}</div>
+                                                            </div>
+                                                        </DropdownMenuItem>
+                                                    ))
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
 
-                                        {/* Microphone Button */}
-                                        <motion.button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (!isRecording) {
-                                                    setIsRecording(true);
-                                                    startRecording();
-                                                } else {
-                                                    setIsRecording(false);
-                                                    stopRecording();
-                                                }
-                                            }}
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                            className={`p-3 rounded-lg transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-0 ${isRecording
-                                                ? 'bg-red-500 hover:bg-red-600 text-white'
-                                                : 'bg-gray-600 hover:bg-gray-500 text-gray-300'
-                                                }`}
-                                        >
-                                            <AnimatePresence mode="wait">
-                                                {isRecording ? (
-                                                    <motion.div
-                                                        key="recording"
-                                                        initial={{ opacity: 0, scale: 0.8 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.8 }}
-                                                        className="flex items-center justify-center"
-                                                    >
-                                                        <MicOff className="w-5 h-5" />
-                                                    </motion.div>
-                                                ) : (
-                                                    <motion.div
-                                                        key="mic"
-                                                        initial={{ opacity: 0, scale: 0.8 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.8 }}
-                                                        className="flex items-center justify-center"
-                                                    >
-                                                        <Mic className="w-5 h-5" />
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </motion.button>
+                                        {/* Microphone button removed; default OS/browser dictation can be used */}
 
                                         {/* Send Button */}
                                         <motion.button

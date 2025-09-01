@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import StyledDropdown from '@/components/ui/styled-dropdown'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sliders, File, FileText, Image, FileSpreadsheet, Save } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Sliders, File, FileText, Image, FileSpreadsheet, Save, Settings, SquareArrowOutUpRight } from 'lucide-react'
 
 const AIInputSettingModal = ({
     selectedModel,
@@ -19,8 +20,10 @@ const AIInputSettingModal = ({
     const [fileLimit, setFileLimit] = useState('10')
     const [allowedFileTypes, setAllowedFileTypes] = useState(['images', 'documents'])
     const [priorityOrder, setPriorityOrder] = useState(['images', 'documents'])
+    const navigate = useNavigate()
 
     const models = [
+        { value: 'gpt-5-preview', name: 'GPT-5 (Preview)', description: 'Early access, subject to change' },
         { value: 'Claude Sonnet 4', name: 'Claude Sonnet 4', description: 'Most advanced model' },
         { value: 'gpt-4', name: 'GPT-4', description: 'OpenAI GPT-4' },
         { value: 'gpt-3.5', name: 'GPT-3.5 Turbo', description: 'Fast and efficient' },
@@ -190,9 +193,21 @@ const AIInputSettingModal = ({
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {/* AI Model Selection */}
                                     <motion.div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <motion.div whileHover={{ scale: 1.1 }} className="w-2 h-2 bg-blue-500 rounded-full" />
-                                            <Label className="text-lg font-semibold text-white">AI Model</Label>
+                                        <div className="flex items-center justify-between gap-2 w-full">
+                                            <div className="flex items-center gap-2">
+                                                <motion.div whileHover={{ scale: 1.1 }} className="w-2 h-2 bg-blue-500 rounded-full" />
+                                                <Label className="text-lg font-semibold text-white">AI Model</Label>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                onClick={() => navigate('/settings/models/manage')}
+                                                className="h-auto cursor-pointer px-0 text-xs sm:text-sm text-gray-400 hover:text-gray-200 hover:underline underline-offset-4"
+                                                aria-label="Manage models"
+                                            >
+                                                <SquareArrowOutUpRight className="w-4 h-4 mr-1 opacity-70" />
+                                                Manage models
+                                            </Button>
                                         </div>
                                         <StyledDropdown
                                             value={selectedModel}
