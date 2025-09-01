@@ -16,7 +16,7 @@ const Chat = () => {
     const [messagesByChat, setMessagesByChat] = useState({
         ch_1: [],
     })
-    const [model] = useState('granite3-moe')
+    const [model, setModel] = useState('granite3-moe')
     const [currentTaskId, setCurrentTaskId] = useState(null)
     const unlistenRefs = useRef({ stream: null, done: null })
 
@@ -45,7 +45,7 @@ const Chat = () => {
         const history = historyOverride || buildOllamaMessagesFrom(messagesByChat[chatId])
         try {
             const taskId = await invoke('cmd_stream_chat_start', {
-                model,
+                model: model || 'granite3-moe', // Fallback to default if no model is set
                 messages: history,
             })
             setCurrentTaskId(taskId)
@@ -92,22 +92,34 @@ const Chat = () => {
         if (id && id !== activeChatId) setActiveChatId(id)
         const state = location.state || {}
         const initialMsg = state && state.initialMsg
+        const selectedModel = state.selectedModel
+
+        // Set the model if provided in state
+        if (selectedModel && selectedModel !== model) {
+            setModel(selectedModel)
+        }
+
         if (initialMsg && id) {
             // Prevent duplicate seeding if user reloads or navigates back
             const seededKey = `seeded:${id}`
             if (!sessionStorage.getItem(seededKey)) {
                 sessionStorage.setItem(seededKey, '1')
-                setMessagesByChat(prev => ({
-                    ...prev,
-                    [id]: [...(prev[id] || []), initialMsg]
-                }))
+                setMessagesByChat(prev => {
+                    const currentMessages = prev[id] || []
+                    const updatedMessages = [...currentMessages, initialMsg]
+                    // Start streaming with the updated messages
+                    const history = buildOllamaMessagesFrom(updatedMessages)
+                    startAssistantStream(id, history)
+                    return {
+                        ...prev,
+                        [id]: updatedMessages
+                    }
+                })
                 setIsProcessing(true)
-                const history = buildOllamaMessagesFrom([...(messagesByChat[id] || []), initialMsg])
-                startAssistantStream(id, history)
             }
             navigate(location.pathname, { replace: true, state: {} })
         }
-    }, [id])
+    }, [id, model])
 
     const handleNewChat = () => {
         const newId = `ch_${Date.now()}`

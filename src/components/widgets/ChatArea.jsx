@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import CodeBlock from './CodeBlock'
 import StreamingMessageView from './StreamingMessageView'
+import ThinkingMarkdown from './ThinkingMarkdown'
 
 const ChatArea = ({ messages, onSend, isProcessing }) => {
     const [input, setInput] = useState('')
@@ -268,17 +269,9 @@ const ChatArea = ({ messages, onSend, isProcessing }) => {
                                     <StreamingMessageView text={m.content || ''} />
                                 ) : (
                                     <div className="md max-w-none">
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkGfm]}
-                                            components={{
-                                                // After stream completes, allow Monaco for multi-line blocks
-                                                code: ({ inline, className, children, ...props }) => (
-                                                    <CodeBlock inline={inline} className={className} {...props}>{children}</CodeBlock>
-                                                )
-                                            }}
-                                        >
+                                        <ThinkingMarkdown>
                                             {m.content || ''}
-                                        </ReactMarkdown>
+                                        </ThinkingMarkdown>
                                     </div>
                                 )}
                                 {/* Assistant actions */}

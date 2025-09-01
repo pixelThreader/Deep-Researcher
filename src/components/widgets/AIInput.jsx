@@ -53,6 +53,8 @@ const AIInput = () => {
     const [availableModels, setAvailableModels] = useState([]);
     const [isLoadingModels, setIsLoadingModels] = useState(false);
     const [modelsError, setModelsError] = useState(null);
+    const [isLoadingModel, setIsLoadingModel] = useState(false);
+    const [modelLoadError, setModelLoadError] = useState(null);
 
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -109,6 +111,13 @@ const AIInput = () => {
         fetchAvailableModels();
     }, []);
 
+    // Load the selected model when it changes or when models are loaded
+    useEffect(() => {
+        if (availableModels.length > 0 && selectedModel) {
+            loadSelectedModel();
+        }
+    }, [selectedModel, availableModels]);
+
     // Memoize SplitText props to prevent unnecessary re-renders
     const splitTextProps = useMemo(() => ({
         text: "Deep Researcher AI",
@@ -157,6 +166,25 @@ const AIInput = () => {
             ]);
         } finally {
             setIsLoadingModels(false);
+        }
+    };
+
+    // Load the selected model into Ollama
+    const loadSelectedModel = async () => {
+        if (!selectedModel || isLoadingModel) return;
+
+        setIsLoadingModel(true);
+        setModelLoadError(null);
+
+        try {
+            console.log(`Loading model: ${selectedModel}`);
+            await invoke('cmd_invoke_model', { model: selectedModel });
+            console.log(`Successfully loaded model: ${selectedModel}`);
+        } catch (error) {
+            console.error('Failed to load model:', error);
+            setModelLoadError(`Failed to load model ${selectedModel}: ${error}`);
+        } finally {
+            setIsLoadingModel(false);
         }
     };
 
@@ -323,7 +351,13 @@ const AIInput = () => {
                 // Pass lightweight file descriptors (names only) to avoid serializing File objects
                 files: attachedFiles.map(f => ({ file: { name: f.file?.name || 'attachment' }, importance: f.importance }))
             };
-            navigate(`/chat/${id}`, { state: { initialMsg } });
+            navigate(`/chat/${id}`, {
+                state: {
+                    initialMsg,
+                    selectedModel,
+                    selectedAgentType
+                }
+            });
         } else {
             setMessageDisplayVisible(true);
             setQuery("Please enter a query or attach a file.");
@@ -632,6 +666,8 @@ const AIInput = () => {
                                                     </span>
                                                     {isLoadingModels ? (
                                                         <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : isLoadingModel ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
                                                     ) : (
                                                         <ChevronDown className="w-4 h-4" />
                                                     )}
@@ -655,7 +691,10 @@ const AIInput = () => {
                                                     models.map((model) => (
                                                         <DropdownMenuItem
                                                             key={model.id}
-                                                            onClick={() => setSelectedModel(model.name)}
+                                                            onClick={() => {
+                                                                setSelectedModel(model.name);
+                                                                // Model loading will be triggered by useEffect
+                                                            }}
                                                             className="text-gray-200 hover:bg-gray-700 focus:bg-gray-700 hover:text-gray-200 focus:text-gray-200 cursor-pointer px-3 py-2"
                                                         >
                                                             <div>

@@ -97,3 +97,48 @@
     border-radius: 10px;
     margin: 0.5rem 0;
 }
+
+/* Thinking section styling */
+.md .thinking-section,
+.md .prose .thinking-section {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    position: relative;
+    font-style: italic;
+}
+
+.md .thinking-section::before,
+.md .prose .thinking-section::before {
+    content: "💭";
+    position: absolute;
+    top: -8px;
+    left: 8px;
+    background: linear-gradient(135deg, #3b82f6, #9333ea);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border: 2px solid rgba(31, 41, 55, 0.9);
+}
+
+.md .thinking-section .thinking-label,
+.md .prose .thinking-section .thinking-label {
+    font-weight: 600;
+    color: #60a5fa;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-style: normal;
+}
+
+.md .thinking-section p,
+.md .prose .thinking-section p {
+    margin: 0.5rem 0;
+    color: #cbd5e1;
+    opacity: 0.9;
+}

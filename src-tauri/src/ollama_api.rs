@@ -20,7 +20,7 @@ static RUNNING_TASKS: Lazy<Arc<Mutex<HashMap<String, JoinHandle<()>>>>> =
     Lazy::new(|| Arc::new(Mutex::new(HashMap::new())));
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ChatMessage {    
+pub struct ChatMessage {
     pub role: String, // "user" | "assistant" | "system"
     pub content: String,
 }
@@ -223,6 +223,21 @@ pub async fn generate_content(model: &str, prompt: &str) -> Result<String, Strin
     }
 }
 
+pub async fn invoke_model(model: &str) -> Result<(), String> {
+    let url = format!("{}/api/generate", OLLAMA_BASE_URL);
+    let body = json!({
+        "model": model,
+        "prompt": "Hello",
+        "stream": false
+    });
+    let resp = post(&url, body).await.map_err(|e| e.to_string())?;
+    if resp.status().is_success() {
+        Ok(())
+    } else {
+        Err(format!("Failed to invoke model: HTTP {}", resp.status()))
+    }
+}
+
 // ==================== Tauri Commands ====================
 
 #[tauri::command]
@@ -270,4 +285,9 @@ pub async fn cmd_unload_model(model_name: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn cmd_generate_content(model: String, prompt: String) -> Result<String, String> {
     generate_content(&model, &prompt).await
+}
+
+#[tauri::command]
+pub async fn cmd_invoke_model(model: String) -> Result<(), String> {
+    invoke_model(&model).await
 }

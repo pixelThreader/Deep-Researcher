@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import StreamingMonaco from './StreamingMonaco'
-import CodeBlock from './CodeBlock'
+// import ReactMarkdown from 'react-markdown'
+// import remarkGfm from 'remark-gfm'
+// import StreamingMonaco from './StreamingMonaco'
+// import CodeBlock from './CodeBlock'
+import ThinkingMarkdown from './ThinkingMarkdown'
 
 export default function StreamingMessageView({ text }) {
     const [isStreaming, setIsStreaming] = useState(true)
@@ -76,16 +77,9 @@ export default function StreamingMessageView({ text }) {
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className="streaming-content"
             >
-                <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                        code: ({ inline, className, children, ...props }) => (
-                            <CodeBlock inline={inline} className={className} {...props}>{children}</CodeBlock>
-                        )
-                    }}
-                >
+                <ThinkingMarkdown>
                     {text || ''}
-                </ReactMarkdown>
+                </ThinkingMarkdown>
             </motion.div>
 
             {/* Blinking cursor */}
