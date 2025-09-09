@@ -26,6 +26,7 @@ import Aurora from '../bits/Aurora/Aurora';
 import GradientText from '../bits/GradientText/GradientText';
 import ClickSpark from '../bits/ClickSpark/ClickSpark';
 import AIInputSettingModal from './AIInputSettingModal';
+import CTAComponent from './CTAComponent';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -900,7 +901,9 @@ const AIInput = () => {
                         </AnimatePresence>
                     </div>
                 </div>
-                {/* Your content here */}
+
+                {/* CTA Component */}
+                <CTAComponent />
             </ClickSpark>
         </div>
     );
