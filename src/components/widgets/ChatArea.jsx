@@ -184,14 +184,19 @@ const ChatArea = ({ messages, onSend, isProcessing }) => {
         if (!Array.isArray(messages)) return -1
         for (let i = messages.length - 1; i >= 0; i--) {
             const m = messages[i]
-            if (m && m.role === 'assistant' && m.streaming) return i
+            // Only consider it streaming if it's explicitly true, not just truthy
+            if (m && m.role === 'assistant' && m.streaming === true) return i
         }
         return -1
     }, [messages])
 
     const stableMessages = useMemo(() => {
         if (!Array.isArray(messages)) return []
-        return messages.filter((_, idx) => idx !== streamingIdx)
+        // Filter out the actively streaming message, but keep completed assistant messages
+        if (streamingIdx >= 0) {
+            return messages.filter((_, idx) => idx !== streamingIdx)
+        }
+        return messages
     }, [messages, streamingIdx])
 
     const stableKey = useMemo(() => {
@@ -341,7 +346,7 @@ const ChatArea = ({ messages, onSend, isProcessing }) => {
                 {/* Centered container for all messages */}
                 <div className="w-full max-w-[900px] mx-auto px-4 space-y-6">
                     {stableView}
-                    {streamingIdx >= 0 && messages[streamingIdx]?.role === 'assistant' && (
+                    {streamingIdx >= 0 && messages[streamingIdx]?.role === 'assistant' && messages[streamingIdx]?.streaming === true && (
                         <div
                             key={messages[streamingIdx].id}
                             className="flex justify-start mt-6"

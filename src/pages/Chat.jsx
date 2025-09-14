@@ -13,9 +13,7 @@ const Chat = () => {
     const initialId = id || 'ch_1'
     const [activeChatId, setActiveChatId] = useState(initialId)
     const [isProcessing, setIsProcessing] = useState(false)
-    const [messagesByChat, setMessagesByChat] = useState({
-        ch_1: [],
-    })
+    const [messagesByChat, setMessagesByChat] = useState({})
     const [model, setModel] = useState('granite3-moe')
     const [currentTaskId, setCurrentTaskId] = useState(null)
     const unlistenRefs = useRef({ stream: null, done: null })
@@ -34,7 +32,99 @@ const Chat = () => {
         return (list || []).map(m => ({ role: m.role, content: m.content }))
     }
 
-    async function startAssistantStream(chatId, historyOverride = null) {
+    // Calculate tokens (rough estimate: 1 token ≈ 4 characters)
+    function estimateTokens(text) {
+        return Math.ceil(text.length / 4)
+    }
+
+    // Calculate chat statistics
+    const chatStats = useMemo(() => {
+        const messages = currentMessages || []
+        let totalTokens = 0
+        let totalFiles = 0
+        let contextTokens = 0
+        let nextPromptFiles = 0
+
+        messages.forEach(message => {
+            // Count tokens in message content
+            if (message.content) {
+                totalTokens += estimateTokens(message.content)
+            }
+
+            // Count files in message
+            if (message.files && Array.isArray(message.files)) {
+                totalFiles += message.files.length
+            }
+        })
+
+        // Calculate context tokens (last few messages that would be sent)
+        const contextMessages = messages.slice(-10) // Last 10 messages for context
+        contextMessages.forEach(message => {
+            if (message.content) {
+                contextTokens += estimateTokens(message.content)
+            }
+        })
+
+        // Calculate files that would be attached to next prompt (from recent messages)
+        const recentMessages = messages.slice(-5) // Last 5 messages
+        recentMessages.forEach(message => {
+            if (message.files && Array.isArray(message.files)) {
+                nextPromptFiles += message.files.length
+            }
+        })
+
+        // Calculate previous response stats
+        let lastResponseStats = null
+        const assistantMessages = messages.filter(m => m.role === 'assistant' && !m.streaming)
+        if (assistantMessages.length > 0) {
+            const lastAssistantMessage = assistantMessages[assistantMessages.length - 1]
+            const wordCount = lastAssistantMessage.content ? lastAssistantMessage.content.split(/\s+/).filter(word => word.length > 0).length : 0
+            const tokenCount = lastAssistantMessage.content ? estimateTokens(lastAssistantMessage.content) : 0
+
+            // Calculate approximate response time (this would need to be tracked during streaming)
+            // For now, we'll use a placeholder or estimate
+            const responseTime = lastAssistantMessage.responseTime || null
+
+            // Find the index of this assistant message to calculate context
+            const messageIndex = messages.findIndex(m => m.id === lastAssistantMessage.id)
+            const contextMessages = messages.slice(0, messageIndex) // All messages before this response
+
+            // Calculate context tokens used
+            let contextTokensUsed = 0
+            contextMessages.forEach(message => {
+                if (message.content) {
+                    contextTokensUsed += estimateTokens(message.content)
+                }
+            })
+
+            // Calculate reference files used (files from all messages before this response)
+            let referenceFilesUsed = 0
+            contextMessages.forEach(message => {
+                if (message.files && Array.isArray(message.files)) {
+                    referenceFilesUsed += message.files.length
+                }
+            })
+
+            lastResponseStats = {
+                tokenCount,
+                wordCount,
+                responseTime,
+                timestamp: lastAssistantMessage.createdAt,
+                contextTokensUsed,
+                referenceFilesUsed
+            }
+        }
+
+        return {
+            totalTokens,
+            totalFiles,
+            contextTokens,
+            nextPromptFiles,
+            lastResponseStats
+        }
+    }, [currentMessages])
+
+    async function startAssistantStream(chatId, historyOverride = null, modelOverride = null) {
         // Stop any previous running stream to avoid mixing outputs
         if (currentTaskId) {
             try { await invoke('cmd_force_stop', { taskId: currentTaskId }) } catch { }
@@ -43,16 +133,25 @@ const Chat = () => {
         }
 
         const history = historyOverride || buildOllamaMessagesFrom(messagesByChat[chatId])
+        const currentModel = modelOverride || model || 'granite3-moe'
         try {
             const taskId = await invoke('cmd_stream_chat_start', {
-                model: model || 'granite3-moe', // Fallback to default if no model is set
+                model: currentModel,
                 messages: history,
             })
             setCurrentTaskId(taskId)
             const replyId = Date.now() + 1
+            const streamStartTime = Date.now()
             setMessagesByChat(prev => ({
                 ...prev,
-                [chatId]: [...(prev[chatId] || []), { id: replyId, role: 'assistant', content: '', streaming: true, createdAt: new Date().toISOString() }]
+                [chatId]: [...(prev[chatId] || []), {
+                    id: replyId,
+                    role: 'assistant',
+                    content: '',
+                    streaming: true,
+                    createdAt: new Date().toISOString(),
+                    streamStartTime
+                }]
             }))
 
             // Cleanup any previous listeners
@@ -72,9 +171,15 @@ const Chat = () => {
             unlistenRefs.current.done = await listen('ollama:stream_done', (event) => {
                 const payload = event?.payload || {}
                 if (payload.taskId !== taskId) return
+                const streamEndTime = Date.now()
+                const responseTime = (streamEndTime - streamStartTime) / 1000 // Convert to seconds
                 setMessagesByChat(prev => ({
                     ...prev,
-                    [chatId]: (prev[chatId] || []).map(m => m.id === replyId ? { ...m, streaming: false } : m)
+                    [chatId]: (prev[chatId] || []).map(m => m.id === replyId ? {
+                        ...m,
+                        streaming: false,
+                        responseTime: responseTime.toFixed(2)
+                    } : m)
                 }))
                 setIsProcessing(false)
                 setCurrentTaskId(null)
@@ -109,7 +214,7 @@ const Chat = () => {
                     const updatedMessages = [...currentMessages, initialMsg]
                     // Start streaming with the updated messages
                     const history = buildOllamaMessagesFrom(updatedMessages)
-                    startAssistantStream(id, history)
+                    startAssistantStream(id, history, selectedModel)
                     return {
                         ...prev,
                         [id]: updatedMessages
@@ -146,7 +251,7 @@ const Chat = () => {
         }))
         setIsProcessing(true)
         const history = buildOllamaMessagesFrom([...(messagesByChat[activeChatId] || []), userMsg])
-        startAssistantStream(activeChatId, history)
+        startAssistantStream(activeChatId, history, model)
     }
 
     // Cleanup listeners on unmount
@@ -171,7 +276,19 @@ const Chat = () => {
                 />
 
                 <main className="flex-1 h-full flex flex-col min-h-0">
-                    <ChatHeader onOpenSettings={() => { }} />
+                    <ChatHeader
+                        onOpenSettings={() => { }}
+                        model={model}
+                        chatInfo={{
+                            messageCount: currentMessages.length,
+                            createdAt: currentMessages.length > 0 ? currentMessages[0]?.createdAt : new Date().toISOString(),
+                            totalTokens: chatStats.totalTokens,
+                            totalFiles: chatStats.totalFiles,
+                            contextTokens: chatStats.contextTokens,
+                            nextPromptFiles: chatStats.nextPromptFiles,
+                            lastResponseStats: chatStats.lastResponseStats
+                        }}
+                    />
                     <ChatArea
                         messages={currentMessages}
                         onSend={handleSend}
