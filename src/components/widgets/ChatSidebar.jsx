@@ -6,7 +6,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback } from '../ui/avatar'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { Plus, Search, BookOpen, Folder, Cpu, Settings, PanelRightClose, PanelRightOpen } from 'lucide-react'
 
@@ -22,6 +22,10 @@ const ChatSidebar = ({
     const [collapsed, setCollapsed] = useState(false)
     const [headerHover, setHeaderHover] = useState(false)
     const navigate = useNavigate()
+    const location = useLocation()
+
+    const isSettingsActive = location.pathname.startsWith('/app/settings')
+    const isFilesActive = location.pathname.startsWith('/app/files')
     useEffect(() => {
         try {
             const saved = localStorage.getItem('dr.sidebar.collapsed')
@@ -92,9 +96,9 @@ const ChatSidebar = ({
 
 
                     ) : (
-                            <div
-                                onClick={() => navigate('/')}
-                                className='flex items-center gap-2 cursor-pointer'>
+                        <div
+                            onClick={() => navigate('/')}
+                            className='flex items-center gap-2 cursor-pointer'>
                             <picture>
                                 <source srcSet="/brand/Square284x284Logo.png" type="image/png" />
                                 <img src="/brand/Square284x284Logo.png" alt="Deep Researcher" className={cn('select-none', 'h-10 w-auto')} draggable={false} />
@@ -204,13 +208,22 @@ const ChatSidebar = ({
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <Plus className="w-4 h-4" />
-                                <motion.span
-                                    className="truncate"
-                                    animate={{ opacity: isExpanded ? 1 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    New chat
-                                </motion.span>
+                                <div className="flex flex-col text-start ps-3">
+                                    <motion.span
+                                        className="truncate"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        New chat
+                                    </motion.span>
+                                    <motion.span
+                                        className="truncate text-xs text-gray-500"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Create a new chat.
+                                    </motion.span>
+                                </div>
                             </button>
                         ) : (
                             <Tooltip>
@@ -246,13 +259,22 @@ const ChatSidebar = ({
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <BookOpen className="w-4 h-4" />
-                                <motion.span
-                                    className="truncate"
-                                    animate={{ opacity: isExpanded ? 1 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    Library
-                                </motion.span>
+                                <div className="flex flex-col text-start ps-3">
+                                    <motion.span
+                                        className="truncate"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        All Researches
+                                    </motion.span>
+                                    <motion.span
+                                        className="truncate text-xs text-gray-500"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        List of your deep researches.
+                                    </motion.span>
+                                </div>
                             </button>
                         ) : (
                             <Tooltip>
@@ -262,7 +284,7 @@ const ChatSidebar = ({
                                     </button>
                                 </TooltipTrigger>
                                 <TooltipContent side="right" align="center" className="bg-slate-900 text-gray-200 border border-gray-800" hideArrow={true} sideOffset={10}>
-                                    <p>Library</p>
+                                    <p>All Researches</p>
                                 </TooltipContent>
                             </Tooltip>
                         )}
@@ -280,22 +302,45 @@ const ChatSidebar = ({
                     >
                         {isExpanded ? (
                             <button
-                                onClick={() => { }}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
+                                onClick={() => navigate('/app/files')}
+                                className={cn(
+                                    "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                                    isFilesActive
+                                        ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                        : "text-gray-300 hover:bg-gray-800/60"
+                                )}
                             >
                                 <Folder className="w-4 h-4" />
-                                <motion.span
-                                    className="truncate"
-                                    animate={{ opacity: isExpanded ? 1 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    Files
-                                </motion.span>
+                                <div className="flex flex-col text-start ps-3">
+                                    <motion.span
+                                        className="truncate"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Files
+                                    </motion.span>
+                                    <motion.span
+                                        className="truncate text-xs text-gray-500"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        List of attached/generated files.
+                                    </motion.span>
+                                </div>
                             </button>
                         ) : (
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <button className="p-2 cursor-pointer text-gray-400 hover:text-gray-200" title="Files">
+                                    <button
+                                        onClick={() => navigate('/app/files')}
+                                        className={cn(
+                                            "p-2 cursor-pointer transition-colors",
+                                            isFilesActive
+                                                ? "text-green-400 bg-green-500/20 rounded-md"
+                                                : "text-gray-400 hover:text-gray-200"
+                                        )}
+                                        title="Files"
+                                    >
                                         <Folder className="w-4 h-4" />
                                     </button>
                                 </TooltipTrigger>
@@ -322,13 +367,22 @@ const ChatSidebar = ({
                                 className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
                             >
                                 <Cpu className="w-4 h-4" />
-                                <motion.span
-                                    className="truncate"
-                                    animate={{ opacity: isExpanded ? 1 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    Models
-                                </motion.span>
+                                <div className="flex flex-col text-start ps-3">
+                                    <motion.span
+                                        className="truncate"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Models
+                                    </motion.span>
+                                    <motion.span
+                                        className="truncate text-xs text-gray-500"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Manage your AI models.
+                                    </motion.span>
+                                </div>
                             </button>
                         ) : (
                             <Tooltip>
@@ -356,22 +410,45 @@ const ChatSidebar = ({
                     >
                         {isExpanded ? (
                             <button
-                                onClick={() => { }}
-                                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-300 hover:bg-gray-800/60 transition-colors"
+                                onClick={() => navigate('/app/settings')}
+                                className={cn(
+                                    "w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors",
+                                    isSettingsActive
+                                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                        : "text-gray-300 hover:bg-gray-800/60"
+                                )}
                             >
                                 <Settings className="w-4 h-4" />
-                                <motion.span
-                                    className="truncate"
-                                    animate={{ opacity: isExpanded ? 1 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    Settings
-                                </motion.span>
+                                <div className="flex flex-col text-start ps-3">
+                                    <motion.span
+                                        className="truncate"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Settings
+                                    </motion.span>
+                                    <motion.span
+                                        className="truncate text-xs text-gray-500"
+                                        animate={{ opacity: isExpanded ? 1 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        Track files from your conversations.
+                                    </motion.span>
+                                </div>
                             </button>
                         ) : (
                             <Tooltip>
                                 <TooltipTrigger>
-                                    <button className="p-2 cursor-pointer text-gray-400 hover:text-gray-200" title="Settings">
+                                    <button
+                                        onClick={() => navigate('/app/settings')}
+                                        className={cn(
+                                            "p-2 cursor-pointer transition-colors",
+                                            isSettingsActive
+                                                ? "text-blue-400 bg-blue-500/20 rounded-md"
+                                                : "text-gray-400 hover:text-gray-200"
+                                        )}
+                                        title="Settings"
+                                    >
                                         <Settings className="w-4 h-4" />
                                     </button>
                                 </TooltipTrigger>
@@ -386,6 +463,7 @@ const ChatSidebar = ({
 
             {/* Recent Chats */}
             <AnimatePresence initial={false}>
+
                 {isExpanded && (
                     <motion.div
                         key="recent"

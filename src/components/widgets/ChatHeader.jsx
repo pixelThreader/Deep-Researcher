@@ -1,9 +1,21 @@
 import React, { useState } from 'react'
-import { Bot, Settings, Info, ChevronDown, MessageSquare, Clock, Cpu, FileText, Hash, Database, Zap, TrendingUp } from 'lucide-react'
+import { Bot, Settings, Info, MessageSquare, Clock, Cpu, FileText, Hash, Database, Zap, TrendingUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ThisChatSettings from './ThisChatSettings'
 
 const ChatHeader = ({ onOpenSettings, model, chatInfo }) => {
     const [isInfoOpen, setIsInfoOpen] = useState(false)
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false)
+    const [chatSettings, setChatSettings] = useState({
+        systemPrompt: '',
+        promptTemplate: 'default',
+        topP: 0.9,
+        topK: 50,
+        documentAnalysisMode: 'auto',
+        thinkingEnabled: true,
+        maxChatMemories: 5
+    })
+
     const messageCount = chatInfo?.messageCount || 0
     const createdAt = chatInfo?.createdAt ? new Date(chatInfo.createdAt).toLocaleDateString() : 'Just now'
     const totalTokens = chatInfo?.totalTokens || 0
@@ -11,6 +23,12 @@ const ChatHeader = ({ onOpenSettings, model, chatInfo }) => {
     const contextTokens = chatInfo?.contextTokens || 0
     const nextPromptFiles = chatInfo?.nextPromptFiles || 0
     const lastResponseStats = chatInfo?.lastResponseStats || null
+
+    const handleSaveChatSettings = (newSettings) => {
+        setChatSettings(newSettings)
+        // Here you could also save to localStorage or send to a backend
+        console.log('Chat settings saved:', newSettings)
+    }
 
     return (
         <div className="w-full px-4 py-3 border-b border-gray-800 bg-gray-900/60">
@@ -156,7 +174,7 @@ const ChatHeader = ({ onOpenSettings, model, chatInfo }) => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className="p-2 rounded-lg bg-gray-800 border border-gray-700 text-gray-300 hover:text-gray-100"
-                        onClick={onOpenSettings}
+                        onClick={() => setIsSettingsModalOpen(true)}
                     >
                         <Settings className="w-5 h-5" />
                     </motion.button>
@@ -170,6 +188,14 @@ const ChatHeader = ({ onOpenSettings, model, chatInfo }) => {
                     onClick={() => setIsInfoOpen(false)}
                 />
             )}
+
+            {/* Chat Settings Modal */}
+            <ThisChatSettings
+                isOpen={isSettingsModalOpen}
+                onOpenChange={setIsSettingsModalOpen}
+                currentSettings={chatSettings}
+                onSaveSettings={handleSaveChatSettings}
+            />
         </div>
     )
 }
