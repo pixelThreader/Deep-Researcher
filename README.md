@@ -22,7 +22,7 @@ graph TD
         API --> Orchestrator[Task Orchestrator]
         Orchestrator --> Crawler["Autonomous Crawler<br/>(Crawl4AI)"]
         Orchestrator --> Youtube[Video Analyst]
-        Orchestrator --> Gemini["Gemini 1.5 Pro<br/>(Reasoning Model)"]
+        Orchestrator --> Gemini["Gemini<br/>(Reasoning Model)"]
         Orchestrator --> Chroma["ChromaDB<br/>(Vector Memory)"]
     end
     
