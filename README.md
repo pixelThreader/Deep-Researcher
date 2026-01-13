@@ -23,6 +23,7 @@ graph TD
         Orchestrator --> Crawler[Autonomous Crawler<br/>(Crawl4AI)]
         Orchestrator --> Youtube[Video Analyst]
         Orchestrator --> Gemini[Gemini 1.5 Pro<br/>(Reasoning Model)]
+        Orchestrator --> Chroma[ChromaDB<br/>(Vector Memory)]
     end
     
     Crawler -->|Extracts| Web[World Wide Web]

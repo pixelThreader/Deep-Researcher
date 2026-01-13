@@ -14,6 +14,7 @@ This service is engineered using a modern Python stack, prioritizing speed, type
     -   [Crawl4AI](https://github.com/unclecode/crawl4ai) for advanced web scraping and content extraction.
     -   `googlesearch-python` for SERP data.
     -   `py-youtube` & `youtube-transcript-api` for video content analysis.
+-   **Memory & Storage**: [ChromaDB](https://www.trychroma.com/) - Open-source vector database for long-term AI memory and semantic search.
 -   **Data Processing**: `pandas`, `openpyxl` for structured data manipulation.
 -   **Package Management**: [uv](https://github.com/astral-sh/uv) - An extremely fast Python package installer and resolver.
 
