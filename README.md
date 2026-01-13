@@ -15,15 +15,15 @@ Deep Researcher operates as a hybrid desktop application, ensuring privacy, perf
 
 ```mermaid
 graph TD
-    User([User]) <--> UI[Desktop Application<br/>(Tauri + React)]
-    UI <-->|HTTP/REST| API[Research Engine<br/>(FastAPI Python)]
+    User([User]) <--> UI["Desktop Application<br/>(Tauri + React)"]
+    UI <-->|HTTP/REST| API["Research Engine<br/>(FastAPI Python)"]
     
     subgraph "Backend Core"
         API --> Orchestrator[Task Orchestrator]
-        Orchestrator --> Crawler[Autonomous Crawler<br/>(Crawl4AI)]
+        Orchestrator --> Crawler["Autonomous Crawler<br/>(Crawl4AI)"]
         Orchestrator --> Youtube[Video Analyst]
-        Orchestrator --> Gemini[Gemini 1.5 Pro<br/>(Reasoning Model)]
-        Orchestrator --> Chroma[ChromaDB<br/>(Vector Memory)]
+        Orchestrator --> Gemini["Gemini 1.5 Pro<br/>(Reasoning Model)"]
+        Orchestrator --> Chroma["ChromaDB<br/>(Vector Memory)"]
     end
     
     Crawler -->|Extracts| Web[World Wide Web]
