@@ -18,7 +18,7 @@ crawl4ai_custom_context.md
 
 # Testing files
 *.json
-*md
+
 
 /bucket/*
 
