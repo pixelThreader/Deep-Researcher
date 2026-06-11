@@ -7,7 +7,7 @@
 
 ---
 
-**Deep Researcher** is a state-of-the-art research assistant that combines the power of **Generative AI** with autonomous web crawling to deliver deep, evidence-based insights. Designed for professionals who demand more than just surface-level answers, it acts as a tireless analyst, synthesizing data from across the web, video content, and structured databases into comprehensive reports.
+**Deep Researcher** is a research harness that combines the power of **Generative AI** with autonomous web crawling to deliver deep, evidence-based insights. Designed for professionals who demand more than just surface-level answers, it acts as a tireless analyst, synthesizing data from across the web, video content, and structured databases into comprehensive reports.
 
 ## System Overview
 
