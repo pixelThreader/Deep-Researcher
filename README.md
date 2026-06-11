@@ -2,7 +2,7 @@
 <div align="center">
   <img src="app/public/brand/Square310x310Logo.png" alt="Deep Researcher Logo" width="200" />
   <br />
-  <p><em>Autonomously Synthesizing Global Knowledge</em></p>
+  <p><em>Deep Researcher v1</em></p>
 </div>
 
 ---
